@@ -1,4 +1,5 @@
 /* Правило подсчёта тестов semenyuk.pro/tests/: ответы → баллы → уровень роли → код профиля → адрес страницы результата.
+   Тест позиций считается по своему правилу — блок «тест позиций» ниже.
    Записано только здесь. Им пользуются страница (tests.js, profile.js — через window.TestScoring)
    и сборка tools/tests-build.mjs (через require) — поэтому браузер не может выдать код,
    для которого сборка не сделала страницу. */
@@ -41,6 +42,37 @@ function reachable(T){
   return Object.keys(codes).sort();
 }
 
+/* ---------- тест позиций (T.type==='positions'): варианты — T.positions, последний — «Автор» ----------
+   В ссылке не баллы, а счёт выборов: сколько раз каждый вариант был главным и сколько вторым (2×k чисел).
+   Из него получаются и баллы, и правило ничьей «чаще главным выбором». */
+function isPos(T){return T.type==='positions'}
+function nOpts(T){return isPos(T)?T.positions.length:T.letters.length}
+function zeros(k){var a=[];for(var i=0;i<k;i++)a.push(0);return a}
+function countsOf(T,ans){var k=nOpts(T),m=zeros(k),s=zeros(k);
+  ans.forEach(function(a){if(!a)return;if(a.m>=0)m[a.m]++;if(a.s>=0)s[a.s]++});return m.concat(s)}
+function posScores(T,st){var k=nOpts(T);return st.slice(0,k).map(function(v,i){return MAIN*v+SECOND*st[k+i]})}
+/* Позиции без «Автора» по убыванию: баллы, затем число главных выборов, затем порядок в data.js. */
+function posRank(T,st){var k=nOpts(T),sc=posScores(T,st),idx=[];for(var i=0;i<k-1;i++)idx.push(i);
+  return idx.sort(function(a,b){return sc[b]-sc[a]||st[b]-st[a]||a-b})}
+/* Результат — адрес страницы: «avtor», «geroy» или «geroy-prositel». */
+function posResult(T,st){var k=nOpts(T),sc=posScores(T,st),P=T.positions;
+  if(sc[k-1]>=T.authorMin)return P[k-1].key;
+  var r=posRank(T,st);return sc[r[1]]>=T.secondMin?P[r[0]].key+'-'+P[r[1]].key:P[r[0]].key}
+function posResults(T){var P=T.positions,k=P.length,out=[P[k-1].key];
+  for(var i=0;i<k-1;i++){out.push(P[i].key);for(var j=0;j<k-1;j++)if(j!==i)out.push(P[i].key+'-'+P[j].key)}
+  return out.sort()}
+function validCounts(T,st){var k=nOpts(T),n=T.questions.length;
+  if(st.length!==2*k||!st.every(function(v){return v>=0&&v<=n&&v===Math.floor(v)}))return false;
+  var m=st.slice(0,k),s=st.slice(k),sum=function(a){return a.reduce(function(x,y){return x+y},0)};
+  return sum(m)===n&&sum(s)===n&&m.every(function(v,i){return v+s[i]<=n})}
+
+/* ---------- общий вход для страницы и сборки: что лежит в ссылке, какой результат, какая папка ---------- */
+function statsOf(T,ans){return isPos(T)?countsOf(T,ans):scoresOf(ans)}
+function validStats(T,st){return isPos(T)?validCounts(T,st):validScores(T,st)}
+function resultOf(T,st){return isPos(T)?posResult(T,st):codeOf(T,st)}
+function pageOf(T,id){return isPos(T)?id:slugOf(id)}
+function results(T){return isPos(T)?posResults(T):reachable(T)}
+
 /* Текст data.js → объект теста. Формат: JSON после строки «window.TEST=». */
 function parseData(src){
   var at=src.indexOf('\nwindow.TEST=');
@@ -49,6 +81,8 @@ function parseData(src){
 }
 
 var api={MAIN:MAIN,SECOND:SECOND,scoresOf:scoresOf,levelOf:levelOf,levelOfChar:levelOfChar,codeOf:codeOf,slugOf:slugOf,
-  validScores:validScores,reachable:reachable,parseData:parseData};
+  validScores:validScores,reachable:reachable,parseData:parseData,
+  isPos:isPos,nOpts:nOpts,countsOf:countsOf,posScores:posScores,posRank:posRank,posResult:posResult,posResults:posResults,validCounts:validCounts,
+  statsOf:statsOf,validStats:validStats,resultOf:resultOf,pageOf:pageOf,results:results};
 if(typeof module==='object'&&module.exports)module.exports=api;else root.TestScoring=api;
 })(this);

@@ -2,7 +2,8 @@
    pack — в байты, encrypt — открытым ключом Владимира из data.js (ECDH P-256 + AES-GCM), base64url.
    decrypt — закрытым ключом (страница /tests/key/ хранит его только в браузере Владимира), unpack — обратно.
 
-   Формат байтов: [версия теста][дни с 2026-01-01, 2 байта][ответы: по 4 бита на вопрос — главный<<2 | второй]
+   Формат байтов: [версия теста][дни с 2026-01-01, 2 байта][ответы: поток бит, на вопрос главный и второй выбор
+   по w бит, старшие биты первыми; w=2 при четырёх вариантах (PAEI: 4 бита на вопрос), w=3 при пяти–восьми]
    затем имя, Telegram, email: по байту длины (до 255) и UTF-8.
    Формат зашифрованного: [одноразовый открытый ключ, 65 байт][iv, 12 байт][шифротекст AES-GCM].
 
@@ -19,19 +20,25 @@ function unb64u(str){str=str.replace(/-/g,'+').replace(/_/g,'/');while(str.lengt
 /* UTF-8 не длиннее max байт, обрезка по границе символа: половина буквы при расшифровке дала бы «�». */
 function utf8(x,max){var b=new TextEncoder().encode(x||'');if(b.length<=max)return b;var e=max;while(e>0&&(b[e]&0xC0)===0x80)e--;return b.slice(0,e)}
 
+/* Бит на один выбор и байт на все ответы. */
+function width(T){var k=T.type==='positions'?T.positions.length:T.letters.length;return k<=4?2:3}
+function ansBytes(T,n){return Math.ceil(n*2*width(T)/8)}
+function putBits(b,at,w,v){for(var j=w-1;j>=0;j--,at++)if((v>>j)&1)b[at>>3]|=128>>(at&7)}
+function getBits(b,at,w){var v=0;for(var j=0;j<w;j++,at++)v=(v<<1)|((b[at>>3]>>(7-(at&7)))&1);return v}
+
 /* p — {ans:[{m,s}], name, tg, mail}; now — для тестов, по умолчанию текущее время. */
 function pack(T,p,now){
   var parts=[p.name,p.tg,p.mail].map(function(x){return utf8(x,255)});
-  var n=Math.ceil(p.ans.length/2),head=new Uint8Array(3+n),days=Math.floor(((now==null?Date.now():now)-EPOCH)/DAY);
+  var w=width(T),head=new Uint8Array(3+ansBytes(T,p.ans.length)),days=Math.floor(((now==null?Date.now():now)-EPOCH)/DAY);
   head[0]=T.version;head[1]=days&255;head[2]=(days>>8)&255;
-  p.ans.forEach(function(a,i){var nib=(a.m<<2)|a.s;head[3+(i>>1)]|=(i&1)?nib:(nib<<4)});
+  var ab=head.subarray(3);p.ans.forEach(function(a,i){putBits(ab,2*w*i,w,a.m);putBits(ab,2*w*i+w,w,a.s)});
   var len=head.length+parts.reduce(function(a,b){return a+1+b.length},0),out=new Uint8Array(len),o=head.length;
   out.set(head,0);parts.forEach(function(b){out[o++]=b.length;out.set(b,o);o+=b.length});
   return out;
 }
 function unpack(T,b){
-  var dec=new TextDecoder(),n=T.questions.length,ans=[],o=3+Math.ceil(n/2);
-  for(var i=0;i<n;i++){var byte=b[3+(i>>1)],nib=(i&1)?byte&15:byte>>4;ans.push({m:nib>>2,s:nib&3})}
+  var dec=new TextDecoder(),n=T.questions.length,ans=[],w=width(T),o=3+ansBytes(T,n),ab=b.subarray(3);
+  for(var i=0;i<n;i++)ans.push({m:getBits(ab,2*w*i,w),s:getBits(ab,2*w*i+w,w)});
   var f=[];for(var k=0;k<3;k++){var l=b[o++];f.push(dec.decode(b.slice(o,o+l)));o+=l}
   return{version:b[0],date:new Date(EPOCH+((b[1]|(b[2]<<8))*DAY)),ans:ans,name:f[0],tg:f[1],mail:f[2]};
 }

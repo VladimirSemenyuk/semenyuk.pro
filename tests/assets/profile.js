@@ -16,23 +16,41 @@ var LEVEL={lead:'ведущая',mid:'рабочая',weak:'слабая'};
 
 /* ---------- тексты ---------- */
 function nb(s){return s.replace(/(\d) /g,'$1 ')}
-function label(T){return 'Профиль склонностей '+T.letters}
+function label(T){return S.isPos(T)?'Позиция руководителя':'Профиль склонностей '+T.letters}
+
+/* Тест позиций: результат — адрес страницы «geroy-prositel», позиции — объекты из T.positions. */
+function posOf(T,id){return id.split('-').map(function(k){for(var i=0;i<T.positions.length;i++)if(T.positions[i].key===k)return T.positions[i];throw new Error('нет позиции '+k)})}
+function isAuthor(T,id){return id===T.positions[T.positions.length-1].key}
+function posTitle(T,id){return posOf(T,id).map(function(p){return p.n}).join(' и\u00a0')}
+function posCaption(T,id){var p=posOf(T,id);
+  return isAuthor(T,id)?'Позиция автора почти во\u00a0всех ситуациях':(p[1]?'Вторая позиция\u00a0— '+p[1].n:p[0].sound)}
+function posDescribe(T,id){var p=posOf(T,id);
+  return (isAuthor(T,id)?'Позиция автора почти во всех ситуациях.':'Ведущая позиция — '+p[0].n+(p[1]?', вторая — '+p[1].n:'')+'. '+p[0].sound)+
+    ' Пройдите тест: '+T.pitch+', '+T.duration+'.'}
+/* «в 1 ситуации», «в 5 ситуациях» */
+function situations(n){return n%10===1&&n%100!==11?'ситуации':'ситуациях'}
+/* Строка шкалы «Автор» по счёту выборов st (главные, затем вторые). */
+function authorLine(T,st){var k=T.positions.length,sc=S.posScores(T,st),a=sc[k-1],n=st[k-1],r=S.posRank(T,st),P=T.positions;
+  var i=a>=T.authorBands[1]?2:(a>=T.authorBands[0]?1:0),line=T.authorLines[i];
+  var second=sc[r[1]]>=T.secondMin?P[r[1]].n:'';
+  if(!second)line=line.replace(/ и[\u00a0 ]\[вторая\]/,'');
+  return line.replace(/N[\u00a0 ]ситуациях/,n+'\u00a0'+situations(n)).replace('[ведущая]',P[r[0]].n).replace('[вторая]',second)+'.'}
 function leadLetters(c){return c.split('').filter(function(ch){return S.levelOfChar(ch)==='lead'})}
 function weakIndexes(c){var r=[];c.split('').forEach(function(ch,i){if(ch==='-')r.push(i)});return r}
 function leadNames(T,c){return leadLetters(c).map(function(ch){return T.roles[ch].n})}
 /* Символы кода для показа: прочерк — длинное тире, уровень задаёт начертание и цвет. */
 function glyphs(c){return c.split('').map(function(ch){return{g:ch==='-'?'–':ch,level:S.levelOfChar(ch)}})}
 /* Одна строка под кодом: превью ссылки и сторис. */
-function caption(T,c){var nm=T.names[c],ln=leadNames(T,c);
+function caption(T,c){if(S.isPos(T))return posCaption(T,c);var nm=T.names[c],ln=leadNames(T,c);
   return nm?'По Адизесу — «'+nm+'»':(ln.length?'Ведущие роли: '+ln.join(', '):'Явной ведущей роли нет')}
 /* Строка под кодом на странице результата: ведущие роли с буквами. */
 function resultLine(T,c){var nm=T.names[c],ld=leadLetters(c);
   return nm?'По\u00a0Адизесу такой профиль называется «'+nm+'».':(ld.length?'Ведущие роли: '+ld.map(function(r){return r+'\u00a0·\u00a0'+T.roles[r].n}).join(', ')+'.':'Явной ведущей роли нет: все четыре роли рабочие.')}
 /* Описание ссылки на страницу результата (meta description, og:description). */
-function describe(T,c){var nm=T.names[c],lead=leadNames(T,c).join(', ');
+function describe(T,c){if(S.isPos(T))return posDescribe(T,c);var nm=T.names[c],lead=leadNames(T,c).join(', ');
   return (nm?'По Адизесу — «'+nm+'». Ведущие роли: '+lead+'.':(lead?'Ведущие роли: '+lead+'.':'Явной ведущей роли нет: все четыре роли рабочие.'))+
     ' Пройдите тест: '+T.pitch+', '+T.duration+'.'}
-function ogTitle(T,c){var nm=T.names[c];return 'Профиль склонностей '+c+(nm?' — «'+nm+'»':'')}
+function ogTitle(T,c){if(S.isPos(T))return 'Позиция руководителя: '+posTitle(T,c).replace(/\u00a0/g,' ');var nm=T.names[c];return 'Профиль склонностей '+c+(nm?' — «'+nm+'»':'')}
 
 /* ---------- рисование на canvas ---------- */
 function palette(){
@@ -75,8 +93,64 @@ function drawByline(p,x,C,T,X,Y,px,center){
 }
 function canvas(W,H){var cv=document.createElement('canvas');cv.width=W;cv.height=H;return cv}
 
+/* Название позиции крупно: кегль подбирается под ширину max, не больше px. Возвращает {w, px}. */
+function drawWord(p,x,C,str,X,base,px,max){p.font(px,600,-px*0.03);var w=x.measureText(str).width;if(w>max)px=Math.floor(px*max/w);
+  w=p.txt(str,px,600,C.ink,X,base,'left',-px*0.03);return{w:w,px:px}}
+
+/* Превью ссылки 1200×630 для теста позиций: позиция словом или, без id, страница теста. */
+function drawOgPos(T,id){
+  var W=1200,H=630,cv=canvas(W,H),x=cv.getContext('2d'),p=pen(x),C=palette(),Lm=72,Rr=W-72;
+  x.fillStyle=C.board;x.fillRect(0,0,W,H);
+  x.fillStyle=C.ink;x.fillRect(Lm,64,Rr-Lm,3);
+  p.txt(label(T).toUpperCase(),22,600,C.ink,Lm,107,'left',1.76);
+  p.txt(T.short,22,400,C.muted,Rr,107,'right');
+  if(id){
+    var lead=posOf(T,id)[0],r=drawWord(p,x,C,lead.n,Lm+24,330,150,Rr-Lm-90);
+    p.mark(RING,[200,64],Lm-14,330-r.px*1.02,r.w+76,r.px*1.34,C.red,6);
+    p.txt(posCaption(T,id).replace(/\u00a0/g,' '),34,500,C.ink2,Lm,427,'left',-0.68);
+  }else{
+    var lines=p.wrap(T.headline,76,600,-3.42,900),y0=307-(lines.length-1)*79/2;
+    lines.forEach(function(l,i){p.txt(l,76,600,C.ink,Lm,y0+i*79,'left',-3.42)});
+    p.txt(T.pitch+' · '+T.duration,34,500,C.ink2,Lm,y0+(lines.length-1)*79+70,'left',-0.68);
+  }
+  drawByline(p,x,C,T,Lm,568,22,false);
+  p.arrow(Rr-36,552,36/44,C.ink,3);
+  p.txt('Пройти тест',22,600,C.ink,Rr-36-12,568,'right');
+  return cv;
+}
+
+/* Сторис 1080×1920 для теста позиций: позиция словом и, если есть счёт выборов st, доска с баллами. */
+function drawStoryPos(T,id,st){
+  var W=1080,H=1920,cv=canvas(W,H),x=cv.getContext('2d'),p=pen(x),C=palette(),Lm=88,Rr=W-88,P=T.positions,k=P.length;
+  x.fillStyle=C.board;x.fillRect(0,0,W,H);
+  p.txt('МОЯ ПОЗИЦИЯ',28,600,C.muted,Lm,288,'left',2.2);
+  var lead=posOf(T,id)[0],r=drawWord(p,x,C,lead.n,Lm+30,500,170,Rr-Lm-110);
+  p.mark(RING,[200,64],Lm-16,500-r.px*1.02,r.w+92,r.px*1.36,C.red,7);
+  p.txt(posCaption(T,id).replace(/\u00a0/g,' '),40,500,C.ink2,Lm,620,'left',-0.8);
+  if(st){
+    var sc=S.posScores(T,st),rk=S.posRank(T,st),top=Math.max.apply(null,sc),dm=Math.max(top,15),au=isAuthor(T,id);
+    var py=690,rh=92,ph=48+rh*k+24+40;
+    x.save();x.shadowColor='rgba(22,24,26,.14)';x.shadowBlur=70;x.shadowOffsetY=32;p.rrect(Lm,py,Rr-Lm,ph,6);x.fillStyle='#FFFFFF';x.fill();x.restore();
+    p.rrect(Lm+.5,py+.5,Rr-Lm-1,ph-1,6);x.strokeStyle=C.line;x.lineWidth=1;x.stroke();
+    var ix=Lm+52,ir=Rr-52,vx=ix+330,vw=ir-vx-90;
+    P.forEach(function(pp,i){var y=py+44+i*rh+(i===k-1?24:0),v=sc[i],on=au?i===k-1:i===rk[0];
+      if(i===k-1){x.fillStyle=C.ink;x.fillRect(ix,y-6,ir-ix,2)}
+      else if(i>0){x.fillStyle=C.line;x.fillRect(ix,y-6,ir-ix,1)}
+      p.txt(pp.n,32,on?700:500,on?C.ink:C.ink2,ix,y+50,'left',-0.6);
+      p.mark(STROKE,[100,14],vx,y+30,Math.max(vw*v/dm,14),14,on?C.ink:C.ink2,on?11:7);
+      p.txt(String(v),44,600,on?C.ink:C.muted,ir,y+54,'right',-1.3);
+    });
+  }
+  var by=1384,bh=120;p.rrect(Lm,by,Rr-Lm,bh,60);x.fillStyle=C.ink;x.fill();
+  p.font(40,600,-0.4);var lw=x.measureText(T.short).width,ax=W/2-(lw+64)/2;
+  p.txt(T.short,40,600,C.paper,ax,by+bh/2+14,'left',-0.4);
+  p.arrow(ax+lw+20,by+bh/2-10,1,C.paper,3);
+  drawByline(p,x,C,T,W/2,by+bh+54,26,true);
+  return cv;
+}
+
 /* Превью ссылки 1200×630: профиль c или, без c, страница теста. */
-function drawOg(T,c){
+function drawOg(T,c){if(S.isPos(T))return drawOgPos(T,c);
   var W=1200,H=630,cv=canvas(W,H),x=cv.getContext('2d'),p=pen(x),C=palette(),Lm=72,Rr=W-72;
   x.fillStyle=C.board;x.fillRect(0,0,W,H);
   x.fillStyle=C.ink;x.fillRect(Lm,64,Rr-Lm,3);
@@ -98,7 +172,7 @@ function drawOg(T,c){
 }
 
 /* Картинка для сторис 1080×1920, сетка как у сторис в Instagram. s — баллы, без них только код. */
-function drawStory(T,c,s){
+function drawStory(T,c,s){if(S.isPos(T))return drawStoryPos(T,c,s);
   var W=1080,H=1920,cv=canvas(W,H),x=cv.getContext('2d'),p=pen(x),C=palette(),L=T.letters,R=T.roles,Lm=88,Rr=W-88;
   x.fillStyle=C.board;x.fillRect(0,0,W,H);
   p.txt(('Мой '+label(T).toLowerCase()).toUpperCase(),28,600,C.muted,Lm,288,'left',2.2);
@@ -135,6 +209,7 @@ function drawStory(T,c,s){
 
 var api={AUTHOR:AUTHOR,RING:RING,STROKE:STROKE,LEVEL:LEVEL,nb:nb,label:label,leadLetters:leadLetters,weakIndexes:weakIndexes,leadNames:leadNames,
   glyphs:glyphs,caption:caption,resultLine:resultLine,describe:describe,ogTitle:ogTitle,
+  posOf:posOf,isAuthor:isAuthor,posTitle:posTitle,posCaption:posCaption,posDescribe:posDescribe,authorLine:authorLine,situations:situations,
   fontsReady:fontsReady,drawOg:drawOg,drawStory:drawStory};
 if(typeof module==='object'&&module.exports)module.exports=api;else root.TestProfile=api;
 })(this);
