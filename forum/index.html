@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add('js')</script>
+<title>«Равные» · форум технических руководителей</title>
+<meta name="description" content="Закрытая группа для CTO, VP и Head of Engineering в первые два года роли. Раз в месяц онлайн: разбор реальных ситуаций участников, опыт вместо советов, без записи и продаж. Модератор — Владимир Семенюк.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="«Равные» · форум технических руководителей">
+<meta property="og:description" content="Раз в месяц — ваша реальная ситуация и опыт шести равных. Для CTO, VP и Head of Engineering в первые два года роли.">
+<meta property="og:image" content="https://semenyuk.pro/assets/img/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://semenyuk.pro/forum/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://semenyuk.pro/forum/">
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="../site.webmanifest">
+<meta name="theme-color" content="#F3F4F1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Страница форума «Равные». Стили — подмножество index.html и talks/: доска, чернила, линейки вместо карточек, одна красная пометка. */
+:root{
+  color-scheme:light;
+  --board:#F3F4F1; --paper:#FAFAF8;
+  --ink:#16181A; --ink-2:#3A3E42; --muted:#5E6469;
+  --line:#D8DBD8; --line-2:#BFC4C6; --red:#D2302C;
+  --font:Onest, system-ui, sans-serif;
+  --wrap:1232px; --side:clamp(20px,4vw,56px); --gutter:24px;
+  --nav:68px;
+  --h3:clamp(20px,1.7vw,23px);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scrollbar-color:var(--line-2) var(--board)}
+body{margin:0;background:var(--board);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.6;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased;font-variant-numeric:lining-nums}
+::selection{background:var(--ink);color:var(--board)}
+h1,h2,h3{font-weight:600;letter-spacing:-0.03em;margin:0;text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+ul,ol{margin:0;padding:0;list-style:none}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:2px}
+.wrap{width:min(var(--wrap),calc(100% - 2 * var(--side)));margin-inline:auto}
+.skip{position:absolute;left:0;top:-60px;z-index:30;background:var(--ink);color:var(--board);padding:10px 16px;border-radius:6px;text-decoration:none}
+.skip:focus{top:12px}
+
+.link{text-decoration:none;font-weight:600;background:linear-gradient(currentColor,currentColor) left 100%/0 1.5px no-repeat,linear-gradient(var(--line-2),var(--line-2)) left 100%/100% 1px no-repeat;padding-bottom:2px;transition:background-size .2s var(--ease)}
+.link:hover{background-size:100% 1.5px,100% 1px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--board);font:600 16px/1 var(--font);letter-spacing:-0.01em;text-decoration:none;white-space:nowrap;transition:transform .15s var(--ease),background-color .15s var(--ease)}
+.btn:hover{background:#000}
+.btn--line{background:transparent;color:var(--ink)}
+.btn--line:hover{background:rgba(22,24,26,.06)}
+.btn--sm{min-height:44px;padding:0 18px;font-size:15px;border-width:1px}
+.btn svg{flex-shrink:0;transition:transform .15s var(--ease)}
+@media (hover:hover) and (pointer:fine){
+  .btn:hover{transform:translateY(-1px)}
+  .btn:hover svg{transform:translateX(3px)}
+}
+.btn:active{transform:translateY(1px) scale(.985);transition-duration:.09s}
+
+/* шапка */
+.nav{position:fixed;inset:0 0 auto;z-index:20;background:rgba(243,244,241,.94);-webkit-backdrop-filter:saturate(1.2) blur(8px);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid transparent;transition:transform .25s var(--ease),border-color .25s var(--ease)}
+.nav.is-scrolled{border-bottom-color:var(--line)}
+.nav.is-hidden{transform:translateY(-100%)}
+.nav:focus-within{transform:none}
+@media (min-width:961px){.nav.is-hidden{transform:none}}
+.nav .btn{gap:0}
+.nav__in{position:relative;display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:var(--nav)}
+.who{display:flex;align-items:center;gap:10px;text-decoration:none;min-height:44px}
+.who svg{width:32px;height:32px;flex-shrink:0}
+.who b{font-weight:600;font-size:19px;letter-spacing:-0.02em}
+.nav__links{display:flex;gap:28px;margin-left:auto;margin-right:12px}
+.nav__links a{font-size:15px;font-weight:500;text-decoration:none;color:var(--ink-2);padding:10px 0;background:linear-gradient(currentColor,currentColor) left calc(100% - 6px)/0 1.5px no-repeat;transition:background-size .2s var(--ease),color .2s var(--ease)}
+.nav__links a:hover{color:var(--ink);background-size:100% 1.5px}
+@media (max-width:960px){.nav__links{display:none}}
+section[id]{scroll-margin-top:0}
+
+.cap{font-size:14px;font-weight:500;color:var(--muted)}
+
+/* первый экран: текст слева, доска справа — как на главной текст и портрет */
+.hero__in{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--gutter);row-gap:48px;min-height:100svh;padding:calc(var(--nav) + clamp(12px,2vh,24px)) 0 clamp(72px,14vh,144px);align-content:center;align-items:start}
+.hero__text{grid-column:1 / span 6;display:flex;flex-direction:column;gap:clamp(24px,3.6vh,36px);align-items:flex-start;padding-right:clamp(0px,2vw,32px)}
+.hero__kicker{font-size:15px;font-weight:500;color:var(--muted)}
+.hero h1{font-size:clamp(42px,4.6vw,66px);line-height:1.04;letter-spacing:-0.04em}
+.hero__lead{font-size:clamp(18px,1.5vw,21px);line-height:1.5;color:var(--ink-2);max-width:30em}
+.hero__lead b{color:var(--ink);font-weight:600}
+.hero__actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin-top:4px}
+.hero__note{font-size:15px;color:var(--muted)}
+
+/* доска: белая панель с полкой снизу; строки «метка / значение» */
+.board{grid-column:7 / span 6;position:relative;background:#fff;border:1px solid var(--line);border-radius:6px;padding:clamp(28px,4.5vh,44px) clamp(28px,3vw,48px) clamp(32px,5vh,48px);box-shadow:0 24px 48px -32px rgba(22,24,26,.28)}
+.board::after{content:"";position:absolute;left:4%;right:4%;bottom:-8px;height:7px;background:var(--line-2);border-radius:0 0 4px 4px}
+.board__title{position:relative;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 clamp(16px,2.4vh,24px)}
+.board__title svg{width:22px;height:22px}
+.board dl{position:relative;margin:0;border-top:1.5px solid var(--ink)}
+.board__row{display:grid;grid-template-columns:104px minmax(0,1fr);gap:16px;padding:clamp(16px,2.6vh,24px) 0;border-bottom:1px solid var(--line)}
+.board__row:last-child{border-bottom:0;padding-bottom:0}
+.board dt{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:5px}
+.board dd{margin:0;font-size:clamp(18px,1.55vw,23px);font-weight:600;line-height:1.3;letter-spacing:-0.02em}
+.board__no{display:flex;flex-wrap:wrap;gap:4px 18px;color:var(--muted)}
+
+/* пометки маркером: красная — одна на экран; чёрная — зачеркнуть лишнее */
+.m{position:relative;display:inline-block;white-space:nowrap}
+.mk{position:absolute;overflow:visible;pointer-events:none}
+.mk path{fill:none;stroke:var(--ink);stroke-width:2.4px;stroke-linecap:round;stroke-linejoin:round}
+.mk--red path{stroke:var(--red);stroke-width:3px}
+.mk--ring{left:-7%;top:-22%;width:114%;height:150%}
+.hero h1 .mk--ring{left:-6%;top:-16%;width:112%;height:136%}
+.hero h1 .mk--red path{stroke-width:3.5px}
+.mk--strike{left:-4%;top:46%;width:108%;height:.34em}
+@media (prefers-reduced-motion:no-preference){
+  .hero__text > *,.board{animation:rise .8s cubic-bezier(.16,1,.3,1) both}
+  .hero__text > :nth-child(2){animation-delay:.08s}
+  .hero__text > :nth-child(3){animation-delay:.16s}
+  .hero__text > :nth-child(4){animation-delay:.24s}
+  .board{animation-delay:.2s}
+  .board .mk path,.hero h1 .mk path{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .8s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--d,1s)}
+}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+.lg-bg{fill:var(--ink)} .lg-fg{fill:var(--board)}
+
+/* секции: заголовок слева, содержание справа */
+.sec{padding:clamp(72px,11vh,112px) 0;border-top:1px solid var(--line)}
+.g12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--gutter)}
+.sec__head{display:flex;flex-direction:column;gap:14px;align-items:flex-start;max-width:760px;margin-bottom:clamp(32px,6vh,64px)}
+.sec__head h2{font-size:clamp(32px,4vw,54px);line-height:1.05}
+.sec__head p{font-size:19px;line-height:1.5;color:var(--ink-2)}
+.sec__body{display:flex;flex-direction:column;gap:clamp(32px,5vh,48px)}
+.sec__body > p{color:var(--ink-2)}
+.lines li{padding:18px 0;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.lines li:first-child{border-top:1px solid var(--line)}
+.lines li b{color:var(--ink);font-weight:600}
+
+/* шаги встречи и разбора */
+
+/* для кого: «подойдёт» — светлая панель с галочками, «не подойдёт» — без панели, приглушённо, с крестиками */
+.fit{display:grid;grid-template-columns:1fr 1fr;gap:20px var(--gutter);align-items:stretch}
+.fit__col{border-radius:6px;padding:24px 24px 12px}
+.fit__col--yes{background:var(--paper);border:1px solid var(--line-2)}
+.fit__col--no{border:1px dashed var(--line-2)}
+.fit__h{display:flex;align-items:center;gap:10px;font-size:var(--h3);letter-spacing:-0.02em;margin-bottom:8px}
+.fit__h svg{width:26px;height:26px;flex-shrink:0}
+.fit li{position:relative;padding:12px 0 12px 30px;border-top:1px solid var(--line)}
+.fit li::before{content:"";position:absolute;left:2px;top:19px;width:16px;height:16px;background:no-repeat center/contain}
+.fit__col--yes li{color:var(--ink)}
+.fit__col--yes li::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2316181A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8.5l3.5 3.5 7.5-8'/%3E%3C/svg%3E")}
+.fit__col--no li{color:var(--muted)}
+.fit__col--no li::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235E6469' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3E%3C/svg%3E")}
+
+/* модератор */
+
+/* вопросы */
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:first-child{border-top:1px solid var(--line)}
+.faq summary{cursor:pointer;list-style:none;padding:22px 40px 22px 0;font-size:19px;font-weight:600;letter-spacing:-0.015em;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";position:absolute;right:6px;top:50%;width:10px;height:10px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:translateY(-70%) rotate(45deg);transition:transform .2s var(--ease)}
+.faq details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+.faq details p{padding:0 0 24px;color:var(--ink-2);max-width:42em}
+.faq details p{max-width:52em}
+
+/* другой формат */
+.statement__text{font-size:clamp(24px,2.7vw,38px);font-weight:500;line-height:1.2;letter-spacing:-0.03em;max-width:960px;text-wrap:pretty}
+.mk--ul{left:-2%;bottom:-.14em;width:104%;height:.28em}
+.js .draw .mk path{stroke-dasharray:1;stroke-dashoffset:1}
+.js .draw.is-drawn .mk path{stroke-dashoffset:0;transition:stroke-dashoffset .8s cubic-bezier(.16,1,.3,1) .15s}
+@media (prefers-reduced-motion:reduce){.js .draw .mk path{stroke-dashoffset:0}}
+.alt{padding-top:24px;color:var(--ink-2);font-size:16px;max-width:42em;margin-top:clamp(40px,6vh,64px)}
+
+/* заголовок широкого раздела: h2 слева, пояснение справа */
+
+/* что приносят: две колонки со штрихами, как «С чем приходят» на главной */
+.come{row-gap:40px}
+.come__col{grid-column:span 6;display:flex;flex-direction:column;gap:12px}
+.come__col + .come__col{border-left:1px solid var(--line);padding-left:clamp(24px,4vw,56px);margin-left:calc(-1 * var(--gutter) / 2)}
+.come__col h3{font-size:var(--h3);line-height:1.12;letter-spacing:-0.03em;margin-bottom:10px}
+.dashes li{text-wrap:pretty;position:relative;padding:clamp(10px,1.7vh,16px) 0 clamp(10px,1.7vh,16px) 44px;font-size:clamp(17px,1.4vw,20px);line-height:1.45;font-weight:400;letter-spacing:-0.015em}
+.dashes li svg{position:absolute;left:0;top:calc(clamp(10px,1.7vh,16px) + .64em);width:24px;height:8px}
+.dashes li svg path{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}
+.come__note{margin-top:clamp(32px,5vh,48px);color:var(--ink-2);font-size:16px;max-width:36em}
+
+/* как проходит встреча: шкала времени */
+.tl{display:flex;flex-direction:column;gap:10px}
+.tl__labels,.tl__bar{display:flex;gap:4px}
+.tl__labels span{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:clip;font-variant-numeric:tabular-nums}
+.tl__labels .tl__main{color:var(--ink);font-weight:600}
+.tl__bar span{height:6px;border-radius:3px;background:var(--line-2)}
+.tl__bar .tl__main{background:var(--ink)}
+.phases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:32px var(--gutter);margin-top:clamp(16px,3vh,32px)}
+.phase{display:flex;flex-direction:column;gap:6px}
+.phase__n{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.phase h3{font-size:var(--h3);letter-spacing:-0.02em}
+.phase p{color:var(--ink-2);font-size:16px}
+.phase--main{grid-column:span 2;background:#fff;border:1px solid var(--line);border-radius:6px;padding:22px 24px}
+.phase--main ol{margin-top:6px;counter-reset:r}
+.phase--main li{counter-increment:r;position:relative;padding:9px 0 9px 28px;color:var(--ink-2);font-size:16px;border-top:1px solid var(--line)}
+.phase--main li:first-child{border-top:0}
+.phase--main li::before{content:counter(r);position:absolute;left:0;top:9px;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--board);font-size:11px;font-weight:600;display:grid;place-items:center;margin-top:3px}
+.phase--main li b{color:var(--ink)}
+
+/* правила: пять пунктов с крупными номерами */
+.rules{border-bottom:1px solid var(--line)}
+.rule{display:grid;grid-template-columns:96px minmax(0,4fr) minmax(0,7fr);column-gap:var(--gutter);row-gap:6px;align-items:start;border-top:1px solid var(--line);padding:clamp(20px,3vh,28px) 0}
+.rule__n{font-size:clamp(26px,3.4vw,48px);font-weight:400;line-height:40px;letter-spacing:-0.04em;color:var(--muted);font-variant-numeric:lining-nums}
+.rule h3{font-size:var(--h3);line-height:40px;letter-spacing:-0.02em}
+.rule p{color:var(--ink-2);font-size:17px;line-height:1.55;padding-top:7px}
+
+/* модератор: тёмная полоса во всю ширину */
+.host{background:var(--ink);color:var(--board);padding:clamp(72px,11vh,112px) 0}
+.host > .wrap{width:min(var(--wrap),calc(100% - 2 * var(--side)))}
+.host__in{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--gutter);row-gap:32px;align-items:start}
+.host__photo{grid-column:8 / span 5;grid-row:1;margin:0}
+.host__photo img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 30%;filter:grayscale(1) contrast(1.05);border-radius:6px}
+.host__text{grid-column:1 / span 6;grid-row:1;display:flex;flex-direction:column;gap:22px;align-items:flex-start}
+.host__cap{font-size:15px;font-weight:500;color:rgba(243,244,241,.62)}
+.host h2{font-size:clamp(36px,4.4vw,60px);line-height:1.04;letter-spacing:-0.04em}
+.host__sub{font-size:clamp(18px,1.6vw,22px);color:rgba(243,244,241,.86);max-width:30em}
+.host__facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gutter);width:100%;border-top:1px solid rgba(243,244,241,.26);padding-top:22px;margin-top:6px}
+.host__facts b{display:block;font-size:clamp(28px,2.6vw,38px);font-weight:600;line-height:1;letter-spacing:-0.035em}
+.host__facts span{display:block;margin-top:10px;font-size:15px;line-height:1.4;color:rgba(243,244,241,.66)}
+.host__role{border-top:1px solid rgba(243,244,241,.26);padding-top:20px;color:rgba(243,244,241,.86);max-width:34em}
+.host__role b{color:var(--board)}
+.host :focus-visible{outline-color:var(--board)}
+
+/* пилот и участие: цена на белой панели, условия рядом */
+.price{grid-column:1 / span 5;background:#fff;border:1px solid var(--line);border-radius:6px;padding:clamp(28px,4vh,40px) clamp(28px,3vw,40px);display:flex;flex-direction:column;gap:14px;align-items:flex-start;align-self:start}
+.price .btn{margin-top:10px}
+.price__how{font-size:15px;color:var(--ink-2)}
+.price__cap{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.price__sum{font-size:clamp(38px,4.2vw,60px);font-weight:600;line-height:1;letter-spacing:-0.05em}
+.price__sum small{font-size:.28em;font-weight:500;letter-spacing:-0.01em;color:var(--ink-2);margin-left:8px}
+.price p{color:var(--ink-2)}
+.price__old{font-size:.5em;font-weight:500;letter-spacing:-0.02em;color:var(--muted);text-decoration-thickness:2px;margin-right:12px;vertical-align:.35em}
+.vh{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.price__terms{grid-column:7 / span 6}
+
+/* как попасть: призыв слева, шаги вертикально справа */
+.join{row-gap:40px;align-items:start}
+.join__cta{grid-column:1 / span 5;display:flex;flex-direction:column;gap:18px;align-items:flex-start}
+.join__cta h2{font-size:clamp(32px,4vw,54px);line-height:1.05}
+.join__cta > p:not(.hero__note){font-size:19px;line-height:1.5;color:var(--ink-2)}
+.join__cta .btn{margin-top:8px}
+.path{grid-column:7 / span 6;border-bottom:1px solid var(--line)}
+.path li{display:grid;grid-template-columns:48px minmax(0,1fr);gap:16px;padding:20px 0;border-top:1px solid var(--line)}
+.path__n{font-size:15px;font-weight:600;color:var(--muted);padding-top:2px}
+.path h3{font-size:var(--h3);letter-spacing:-0.02em}
+.path p{color:var(--ink-2);font-size:16px;margin-top:4px}
+
+/* подвал */
+.site-foot{border-top:1px solid var(--line)}
+.site-foot__in{display:grid;gap:28px;padding:32px 0 28px}
+.site-foot__groups{display:grid;grid-template-columns:repeat(3,max-content);gap:24px 72px}
+.site-foot__links{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.site-foot__links a{font-size:15px}
+.site-foot p{margin:0;color:var(--muted);font-size:14px}
+.site-foot p.site-foot__title{margin-bottom:10px;font-size:13px;font-weight:600}
+@media (max-width:560px){.site-foot__groups{grid-template-columns:1fr}.site-foot__links{gap:0}.site-foot__links a{display:inline-flex;align-items:center;min-height:44px}}
+
+
+@media (max-width:1100px){
+  .tl__labels span{visibility:hidden}
+  .tl__labels .tl__main{visibility:visible}
+}
+@media (max-width:960px){
+  .sec__head,.sec__body{grid-column:1 / -1}
+  .hero__in{min-height:0}
+  .hero__text,.board{grid-column:1 / -1}
+  .hero__text{padding-right:0}
+  .board{max-width:560px}
+}
+@media (max-width:960px){
+  .come__col{grid-column:1 / -1}
+  .come__col + .come__col{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--line);padding-top:32px}
+  .pilot > *{grid-column:1 / -1}
+  .price__terms{margin-top:32px}
+  .phases{grid-template-columns:1fr 1fr}
+  .phase--main{grid-column:1 / -1;margin-top:0}
+  .rule{grid-template-columns:72px minmax(0,1fr)}
+  .rule p{grid-column:2}
+  .host__photo{grid-column:1 / span 5;grid-row:2}
+  .host__text{grid-column:1 / -1;grid-row:1}
+  .price,.price__terms{grid-column:1 / -1}
+  .join__cta,.path{grid-column:1 / -1}
+}
+@media (max-width:640px){
+  .fit{grid-template-columns:1fr}
+  .phases{grid-template-columns:1fr}
+  .rule{grid-template-columns:56px minmax(0,1fr)}
+  .host__photo{grid-column:1 / span 8}
+  .host__facts{grid-template-columns:1fr;gap:18px}
+}
+@media (max-width:480px){
+  :root{--nav:60px}
+  .who b{font-size:16px;white-space:nowrap}
+  .nav .btn{padding:0 16px}
+  .btn-tail{display:none}
+  .btn{white-space:normal;text-align:center;line-height:1.25;padding:12px 20px}
+  .nav .btn{white-space:nowrap}
+  .hero__actions .btn,.sec__head .btn{width:100%}
+  .board{padding:22px 20px 24px}
+  .board__row{grid-template-columns:76px minmax(0,1fr);gap:12px}
+}
+@media (max-width:360px){
+  :root{--side:16px}
+  .who b{font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important}
+}
+</style>
+<!-- Яндекс.Метрика: счётчик 114369053. Клики по ссылкам с data-goal уходят в цель с параметром place. -->
+<script>
+(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,"script","https://mc.yandex.ru/metrika/tag.js?id=114369053","ym");
+ym(114369053,"init",{ssr:true,webvisor:true,clickmap:true,accurateTrackBounce:true,trackLinks:true});
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-goal]");if(a)ym(114369053,"reachGoal",a.dataset.goal,{place:a.dataset.place});});
+</script>
+</head>
+<body>
+<noscript><div><img src="https://mc.yandex.ru/watch/114369053" style="position:absolute;left:-9999px" alt=""></div></noscript>
+
+<header class="nav">
+  <div class="wrap nav__in">
+    <a class="skip" href="#main">К&nbsp;содержанию</a>
+    <a class="who" href="#top" aria-label="«Равные» — в начало страницы"><svg viewBox="0 0 300 300" aria-hidden="true"><rect class="lg-bg" width="300" height="300"/><rect class="lg-fg" x="70" y="99" width="160" height="38"/><rect class="lg-fg" x="70" y="163" width="160" height="38"/></svg><b>Равные</b></a>
+    <nav class="nav__links" aria-label="Разделы">
+      <a href="#format">Как устроено</a>
+      <a href="#who">Для&nbsp;кого</a>
+      <a href="#moderator">Модератор</a>
+      <a href="#pilot">Участие</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <a class="btn btn--sm" data-goal="tg_write" data-place="forum-nav" href="https://t.me/m/B6ALIm6YOTIy">Написать<span class="btn-tail">&nbsp;в&nbsp;Telegram</span></a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-h">
+    <div class="wrap hero__in">
+      <div class="hero__text">
+        <p class="hero__kicker">Форум «Равные» · закрытый круг технических руководителей</p>
+        <h1 id="hero-h"><span class="m">Трудные решения<svg class="mk mk--ring mk--red" viewBox="0 0 200 64" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" style="--d:.7s" d="M30 12C70 3 150 2 184 14c18 7 16 28-4 38-38 15-122 14-160 3C2 49 2 31 18 21c22-13 76-17 112-13"/></svg></span> <br>не&nbsp;в&nbsp;одиночку</h1>
+        <p class="hero__lead"><b>Ваша ситуация и&nbsp;опыт шести равных.</b><br> Раз в&nbsp;месяц CTO, VP и&nbsp;Head of&nbsp;Engineering в&nbsp;первые два года роли разбирают то, что нельзя обсудить ни&nbsp;с&nbsp;CEO, ни&nbsp;с&nbsp;командой и&nbsp;уходят с&nbsp;решением и&nbsp;шагом на&nbsp;месяц.</p>
+        <div class="hero__actions">
+          <a class="btn" data-goal="tg_write" data-place="forum-hero" href="https://t.me/m/B6ALIm6YOTIy">Написать «равные» в&nbsp;Telegram <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <p class="hero__note">Пилот: февраль&nbsp;— июль 2027, набор до&nbsp;30&nbsp;января</p>
+        </div>
+      </div>
+      <div class="board">
+        <p class="board__title"><svg viewBox="0 0 300 300" aria-hidden="true"><rect class="lg-bg" width="300" height="300"/><rect class="lg-fg" x="70" y="99" width="160" height="38"/><rect class="lg-fg" x="70" y="163" width="160" height="38"/></svg>Коротко</p>
+        <dl>
+          <div class="board__row"><dt>Состав</dt><dd>6–8 технических руководителей</dd></div>
+          <div class="board__row"><dt>Встреча</dt><dd>Раз в&nbsp;месяц, 2,5&nbsp;часа онлайн</dd></div>
+          <div class="board__row"><dt>Правило</dt><dd><span class="m">Опыт, а&nbsp;не&nbsp;советы<svg class="mk mk--ul" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" style="--d:1s" d="M2 6c30-3 66-4 96-1"/></svg></span></dd></div>
+          <div class="board__row"><dt>Итог</dt><dd>Решение и&nbsp;шаг на&nbsp;месяц</dd></div>
+          <div class="board__row"><dt>Нет</dt><dd class="board__no"><span class="m">записи<svg class="mk mk--strike" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" style="--d:1.4s" d="M2 6c30-2 66-3 96-1"/></svg></span><span class="m">продаж<svg class="mk mk--strike" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" style="--d:1.55s" d="M2 6c30-2 66-3 96-1"/></svg></span><span class="m">конкурентов<svg class="mk mk--strike" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" style="--d:1.7s" d="M2 6c30-2 66-3 96-1"/></svg></span></dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="why-h">
+    <div class="wrap">
+      <div class="sec__head">
+        <h2 id="why-h">Что приносят на&nbsp;разбор</h2>
+        <p>Ситуации, которые не&nbsp;с&nbsp;кем обсудить: CEO ждёт результата, команде нужна опора, коллеги&nbsp;— часть той&nbsp;же ситуации.</p>
+      </div>
+      <div class="g12 come">
+        <div class="come__col">
+          <h3>CEO, бизнес, смежники</h3>
+          <ul class="dashes">
+            <li><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4.5c5-.6 11-.8 16-.2"/></svg>CEO требует сроки, которые команда не&nbsp;тянет</li>
+            <li><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4.5c5-.6 11-.8 16-.2"/></svg>Сверху ждут ускорения от&nbsp;AI, а&nbsp;команда видит в&nbsp;нём угрозу</li>
+            <li><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4.5c5-.6 11-.8 16-.2"/></svg>Смежники не&nbsp;слушают, а&nbsp;отвечать за&nbsp;результат вам</li>
+          </ul>
+        </div>
+        <div class="come__col">
+          <h3>Команда и&nbsp;люди</h3>
+          <ul class="dashes">
+            <li><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4.5c5-.6 11-.8 16-.2"/></svg>Сильный инженер стал тимлидом и&nbsp;не&nbsp;справляется</li>
+            <li><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4.5c5-.6 11-.8 16-.2"/></svg>Команда выросла вдвое, и&nbsp;все решения снова сходятся на&nbsp;вас</li>
+            <li><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4.5c5-.6 11-.8 16-.2"/></svg>Досталась команда и&nbsp;архитектура, которые вы не&nbsp;выбирали</li>
+          </ul>
+        </div>
+      </div>
+      <p class="come__note">Вы уходите с&nbsp;опытом тех, кто прошёл похожее, и&nbsp;одним шагом на&nbsp;месяц. Примеры типичные, не&nbsp;истории участников.</p>
+    </div>
+  </section>
+
+  <section class="sec statement" aria-label="Принцип">
+    <div class="wrap">
+      <p class="statement__text">Здесь не&nbsp;дают советов и&nbsp;ничего не&nbsp;продают. Шесть руководителей, которые проходят то&nbsp;же самое, рассказывают, что делали сами. Вы уходите <span class="m draw">с&nbsp;решением<svg class="mk mk--ul mk--red" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 6c30-3 66-4 96-1"/></svg></span>, а&nbsp;не&nbsp;с&nbsp;чужим мнением.</p>
+    </div>
+  </section>
+
+  <section class="sec sec--wide" id="format" aria-labelledby="meet-h">
+    <div class="wrap">
+    <div class="sec__head">
+      <h2 id="meet-h">Как проходит встреча</h2>
+      <p>Два с&nbsp;половиной часа по&nbsp;одному протоколу каждый месяц.<br>Больше половины времени&nbsp;— разборы.<br>Модератор держит время и&nbsp;правила.<br>Содержание принадлежит участникам.</p>
+    </div>
+    <div class="sec__body">
+      <div class="tl" aria-hidden="true">
+        <div class="tl__labels"><span style="flex:25">Чек-ин · 25&nbsp;мин</span><span style="flex:12">Отчёт · 12&nbsp;мин</span><span class="tl__main" style="flex:80">Разборы · 80&nbsp;мин</span><span style="flex:15">Итог · 15&nbsp;мин</span></div>
+        <div class="tl__bar"><span style="flex:25"></span><span style="flex:12"></span><span class="tl__main" style="flex:80"></span><span style="flex:15"></span></div>
+      </div>
+      <div class="phases">
+        <div class="phase"><span class="phase__n">25&nbsp;мин</span><h3>Чек-ин</h3><p>Как прошёл месяц, что изменилось, есть&nbsp;ли ситуация на&nbsp;разбор.</p></div>
+        <div class="phase"><span class="phase__n">12&nbsp;мин</span><h3>Отчёт</h3><p>По&nbsp;обязательствам прошлого месяца: сделал или нет и&nbsp;что узнал.</p></div>
+        <div class="phase phase--main"><span class="phase__n">80&nbsp;мин · одна-две ситуации</span><h3>Разборы</h3>
+          <ol>
+            <li><b>Подача.</b> Автор рассказывает ситуацию.</li>
+            <li><b>Вопросы.</b> Чтобы понять, а&nbsp;не&nbsp;подсказать.</li>
+            <li><b>Опыт.</b> Каждый: что делал в&nbsp;похожем случае и&nbsp;что вышло.</li>
+            <li><b>Вывод.</b> Автор говорит, что забирает и&nbsp;какой шаг сделает.</li>
+          </ol>
+        </div>
+        <div class="phase"><span class="phase__n">15&nbsp;мин</span><h3>Итог</h3><p>Каждый берёт обязательство на&nbsp;месяц и&nbsp;говорит, что забирает со&nbsp;встречи.</p></div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <section class="sec sec--wide" aria-labelledby="rules-h">
+    <div class="wrap">
+      <div class="sec__head">
+        <h2 id="rules-h">Правила</h2>
+        <p>Участники принимают их&nbsp;вслух на&nbsp;первой встрече. Без&nbsp;них формат не&nbsp;работает.</p>
+      </div>
+      <div class="sec__body">
+        <ol class="rules">
+          <li class="rule"><span class="rule__n">01</span><h3>Всё остаётся в&nbsp;группе</h3><p>Без&nbsp;записи, расшифровок и&nbsp;AI&#8209;ассистентов. Модератор не&nbsp;использует содержание встреч ни&nbsp;в&nbsp;публикациях, ни&nbsp;в&nbsp;работе с&nbsp;клиентами.</p></li>
+          <li class="rule"><span class="rule__n">02</span><h3>Опыт, а&nbsp;не&nbsp;советы</h3><p>Не&nbsp;«тебе надо», а&nbsp;«у&nbsp;меня было, и&nbsp;вот что вышло».</p></li>
+          <li class="rule"><span class="rule__n">03</span><h3>Присутствие обязательно</h3><p>Не&nbsp;больше двух пропусков за&nbsp;полгода, о&nbsp;пропуске&nbsp;— за&nbsp;72&nbsp;часа.</p></li>
+          <li class="rule"><span class="rule__n">04</span><h3>Никто ничего не&nbsp;продаёт</h3><p>Ни&nbsp;участники, ни&nbsp;модератор&nbsp;— на&nbsp;встречах и&nbsp;в&nbsp;чате.</p></li>
+          <li class="rule"><span class="rule__n">05</span><h3>Без&nbsp;конфликтов интересов</h3><p>В&nbsp;одной группе нет конкурентов, отношений «клиент&nbsp;— подрядчик», руководителя и&nbsp;подчинённого.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec--wide" id="who" aria-labelledby="who-h">
+    <div class="wrap">
+      <div class="sec__head">
+        <h2 id="who-h">Для&nbsp;кого</h2>
+      </div>
+      <div class="sec__body">
+        <div class="fit">
+          <div class="fit__col fit__col--yes">
+            <h3 class="fit__h"><svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#16181A"/><path d="M7.5 13.5l3.6 3.6 7.4-8.2" fill="none" stroke="#F3F4F1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Подойдёт, если</h3>
+            <ul>
+              <li>Вы&nbsp;— CTO, VP или&nbsp;Head of&nbsp;Engineering: первое лицо в&nbsp;технологиях или&nbsp;руководитель руководителей</li>
+              <li>В&nbsp;роли до&nbsp;двух лет или&nbsp;вот-вот в&nbsp;неё войдёте</li>
+              <li>Команда разработки от&nbsp;20&nbsp;человек</li>
+              <li>Готовы говорить о&nbsp;своих ошибках и&nbsp;слушать чужие без&nbsp;поучений</li>
+            </ul>
+          </div>
+          <div class="fit__col fit__col--no">
+            <h3 class="fit__h"><svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12.25" fill="none" stroke="#5E6469" stroke-width="1.5"/><path d="M9 9l8 8M17 9l-8 8" stroke="#5E6469" stroke-width="2" stroke-linecap="round"/></svg>Не&nbsp;подойдёт, если</h3>
+            <ul>
+              <li>Вы продаёте техническим руководителям: агентство, аутстафф, рекрутинг, консалтинг</li>
+              <li>Нужны готовые ответы и&nbsp;наставник, а&nbsp;не&nbsp;равные</li>
+              <li>Цель&nbsp;— знакомства, клиенты или&nbsp;найм</li>
+              <li>Нет времени приходить раз в&nbsp;месяц полгода</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="host" id="moderator" aria-labelledby="mod-h">
+    <div class="wrap host__in">
+      <figure class="host__photo">
+        <img src="../assets/img/vladimir-semenyuk.jpg" width="880" height="1100" alt="Владимир Семенюк, чёрно-белый портрет" loading="lazy">
+      </figure>
+      <div class="host__text">
+        <p class="host__cap">Модератор</p>
+        <h2 id="mod-h">Владимир Семенюк</h2>
+        <p class="host__sub">Ex-CTO Нетологии, ex-CIO mos.ru. Прошёл путь от&nbsp;верстальщика до&nbsp;первого лица в&nbsp;технологиях и&nbsp;закрыл два своих бизнеса&nbsp;— знаю, как выглядит решение, которое не&nbsp;с&nbsp;кем обсудить.</p>
+        <div class="host__facts">
+          <p><b>80&nbsp;→&nbsp;500</b><span>человек в&nbsp;организации, которую вёл через рост</span></p>
+          <p><b>50+</b><span>подготовленных руководителей</span></p>
+          <p><b>1500+</b><span>часов менторских сессий</span></p>
+        </div>
+        <p class="host__role">В&nbsp;группе я&nbsp;<b>модератор, а&nbsp;не&nbsp;ментор</b>: держу протокол, время и&nbsp;конфиденциальность. Советов не&nbsp;даю и&nbsp;ничего не&nbsp;продаю. Здесь вы получаете не&nbsp;меня, а&nbsp;равных.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="pilot" aria-labelledby="pilot-h">
+    <div class="wrap">
+      <div class="sec__head">
+        <h2 id="pilot-h">Пилот и&nbsp;участие</h2>
+      </div>
+      <div class="g12 pilot">
+        <div class="price">
+          <p class="price__cap">Первая группа</p>
+          <p class="price__sum"><s class="price__old"><span class="vh">Обычная цена </span>$250</s> <span class="vh">цена пилота </span>$150<small>в&nbsp;месяц</small></p>
+          <p>Оплата за&nbsp;квартал. После первой встречи можно выйти с&nbsp;полным возвратом.</p>
+          <a class="btn" data-goal="tg_write" data-place="forum-pilot" href="https://t.me/m/B6ALIm6YOTIy">Занять место <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <p class="price__how">Напишите «равные» в&nbsp;Telegram&nbsp;— пришлю анкету. Оплата после разговора, счёт можно выставить на&nbsp;компанию.</p>
+        </div>
+        <ul class="lines price__terms">
+          <li><b>Шесть встреч,</b> февраль&nbsp;— июль 2027. Первая&nbsp;— в&nbsp;начале февраля.</li>
+          <li><b>Время</b> выбираем с&nbsp;участниками. Ориентир&nbsp;— 17:00 по&nbsp;Дубаю: 14:00 Берлин, 16:00 Москва.</li>
+          <li><b>Может платить компания.</b> Она получает счёт и&nbsp;подтверждение участия, но&nbsp;не&nbsp;отчёты о&nbsp;встречах.</li>
+          <li><b>После пилота</b> группа решает, продолжать&nbsp;ли. Первая группа продлевает по&nbsp;цене основателей.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+    <div class="sec__head">
+      <h2 id="faq-h">Вопросы</h2>
+    </div>
+    <div class="sec__body faq">
+      <div>
+        <details>
+          <summary>Почему модератор не&nbsp;даёт советов?</summary>
+          <p>Совет человека без&nbsp;полного контекста редко подходит. Опыт&nbsp;— что вы сделали и&nbsp;что вышло&nbsp;— можно примерить на&nbsp;себя. К&nbsp;тому&nbsp;же модератор, который советует, быстро становится главным в&nbsp;комнате, и&nbsp;группа перестаёт работать как группа равных.</p>
+        </details>
+        <details>
+          <summary>Чем это отличается от&nbsp;чата технических руководителей?</summary>
+          <p>Один и&nbsp;тот&nbsp;же круг из&nbsp;шести-восьми человек, конфиденциальность, правила и&nbsp;обязательства, которые проверяются через месяц. Через полгода участники знают контекст друг друга, и&nbsp;опыт становится точнее.</p>
+        </details>
+        <details>
+          <summary>Что, если я&nbsp;пропущу встречу?</summary>
+          <p>Предупредите за&nbsp;72&nbsp;часа. За&nbsp;полгода можно пропустить две встречи. После второго пропуска говорим о&nbsp;том, остаётесь&nbsp;ли вы в&nbsp;группе: формат держится на&nbsp;постоянном составе.</p>
+        </details>
+        <details>
+          <summary>Почему участие платное?</summary>
+          <p>Вы платите за&nbsp;модерацию, и&nbsp;модератору от&nbsp;группы больше ничего не&nbsp;нужно. Плата держит явку и&nbsp;отбирает тех, кто готов работать полгода.</p>
+        </details>
+        <details>
+          <summary>Можно сначала попробовать?</summary>
+          <p>Да. Первая встреча и&nbsp;есть проба: если после неё вы решите, что формат не&nbsp;ваш, верну оплату полностью.</p>
+        </details>
+        <details>
+          <summary>Что, если в&nbsp;группе окажется мой конкурент или подрядчик?</summary>
+          <p>Не&nbsp;окажется. На&nbsp;разговоре перед приглашением спрашиваю о&nbsp;конкурентах, подрядчиках и&nbsp;клиентах и&nbsp;собираю состав без&nbsp;конфликтов интересов. Если связь обнаружится позже, участник сразу говорит модератору.</p>
+        </details>
+        <details>
+          <summary>Сколько времени нужно на&nbsp;подготовку?</summary>
+          <p>Если хотите разбор, за&nbsp;три дня до&nbsp;встречи присылаете ситуацию по&nbsp;шаблону на&nbsp;одну страницу. В&nbsp;остальные месяцы готовиться не&nbsp;нужно, кроме своего обязательства.</p>
+        </details>
+        <details>
+          <summary>Почему только первые два года в&nbsp;роли?</summary>
+          <p>Чтобы опыт в&nbsp;группе был сопоставимым. Разбор полезен, когда участники проходят похожее сейчас или прошли недавно. Для&nbsp;опытных CTO нужна другая группа.</p>
+        </details>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <section class="sec" id="join" aria-labelledby="join-h">
+    <div class="wrap">
+      <div class="g12 join">
+        <div class="join__cta">
+          <h2 id="join-h">Как попасть</h2>
+          <p>Состав подбираю так, чтобы в&nbsp;группе не&nbsp;было конфликтов интересов.</p>
+          <a class="btn" data-goal="tg_write" data-place="forum-final" href="https://t.me/m/B6ALIm6YOTIy">Написать «равные» в&nbsp;Telegram <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <p class="hero__note">Набор в&nbsp;пилот&nbsp;— до&nbsp;30&nbsp;января 2027</p>
+        </div>
+        <ol class="path">
+          <li><span class="path__n">1</span><div><h3>Напишите «равные»</h3><p>В&nbsp;Telegram или&nbsp;на&nbsp;<a class="link" data-goal="email_write" data-place="forum-join" href="mailto:vladimir@semenyuk.pro">vladimir@semenyuk.pro</a>.</p></div></li>
+          <li><span class="path__n">2</span><div><h3>Анкета</h3><p>Шесть коротких вопросов: роль, команда, что сейчас занимает больше всего внимания.</p></div></li>
+          <li><span class="path__n">3</span><div><h3>Разговор на&nbsp;30&nbsp;минут</h3><p>Проверяем, подходит&nbsp;ли формат вам и&nbsp;вы&nbsp;— группе.</p></div></li>
+          <li><span class="path__n">4</span><div><h3>Приглашение</h3><p>Оплата и&nbsp;устав группы до&nbsp;первой встречи.</p></div></li>
+        </ol>
+      </div>
+      <p class="alt">Если у&nbsp;вас конкретная ситуация и&nbsp;нужен результат в&nbsp;ближайшие месяцы, это не&nbsp;форум, а&nbsp;персональная работа. Начать можно с&nbsp;<a class="link" href="../#start">разбора «Трезвый взгляд»</a>.</p>
+    </div>
+  </section>
+
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap site-foot__in">
+    <nav class="site-foot__groups" aria-label="Подвал">
+      <div class="site-foot__group">
+        <p class="site-foot__title">Сайт</p>
+        <ul class="site-foot__links">
+          <li><a class="link" href="../">Главная</a></li>
+          <li><a class="link" href="../tests/">Тесты</a></li>
+          <li><a class="link" href="../talks/">Выступления</a></li>
+        </ul>
+      </div>
+      <div class="site-foot__group">
+        <p class="site-foot__title">Написать</p>
+        <ul class="site-foot__links">
+          <li><a class="link" data-goal="tg_write" data-place="forum-footer" href="https://t.me/vladimirsemenyuk">Telegram</a></li>
+          <li><a class="link" data-goal="email_write" data-place="forum-footer" href="mailto:vladimir@semenyuk.pro">vladimir@semenyuk.pro</a></li>
+        </ul>
+      </div>
+      <div class="site-foot__group">
+        <p class="site-foot__title">Читать</p>
+        <ul class="site-foot__links">
+          <li><a class="link" data-goal="tg_channel" data-place="forum-footer" href="https://t.me/management_and_happiness">Канал «Управление и&nbsp;Счастье»</a></li>
+          <li><a class="link" data-goal="ig_profile" data-place="forum-footer" href="https://www.instagram.com/vladimir.semenyuk/">Instagram</a></li>
+          <li><a class="link" data-goal="li_profile" data-place="forum-footer" href="https://www.linkedin.com/in/vladimir-semenyuk/">LinkedIn</a></li>
+        </ul>
+      </div>
+    </nav>
+    <p>©&nbsp;2026 Владимир Семенюк</p>
+  </div>
+</footer>
+<script>
+// Шапка как на главной: линейка появляется после прокрутки, на мобильном шапка прячется при прокрутке вниз
+(function(){
+  var bar=document.querySelector('.nav'), last=window.scrollY;
+  function upd(){
+    var y=window.scrollY;
+    bar.classList.toggle('is-scrolled',y>8);
+    if(Math.abs(y-last)<6) return;
+    bar.classList.toggle('is-hidden',y>last&&y>120);
+    last=y;
+  }
+  window.addEventListener('scroll',upd,{passive:true});
+  // пометки маркером дорисовываются один раз, когда блок попадает в экран
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-drawn');io.unobserve(e.target)}})},{threshold:.6});
+  document.querySelectorAll('.draw').forEach(function(el){io.observe(el)});
+  upd();
+})();
+</script>
+</body>
+</html>
